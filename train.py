@@ -103,6 +103,12 @@ def get_arguments():
     parser.add_argument('--max_checkpoints', type=int, default=MAX_TO_KEEP,
                         help='Maximum amount of checkpoints that will be kept alive. Default: '
                              + str(MAX_TO_KEEP) + '.')
+    parser.add_argument('--prob_model_type', type=str, default='softmax',
+                        help='Type of model to use in the output layer. Choices: softmax, sdp. Default: softmax')
+    parser.add_argument('--sdp_k', type=int, default=2,
+                        help='(if using SDP outputs) k value for trend filtering regularizer. Default: 2')
+    parser.add_argument('--sdp_lam', type=float, default=0.001,
+                        help='(if using SDP outputs) lambda value for trend filtering regularizer. Default: 0.001')
     return parser.parse_args()
 
 
@@ -246,7 +252,10 @@ def main():
         initial_filter_width=wavenet_params["initial_filter_width"],
         histograms=args.histograms,
         global_condition_channels=args.gc_channels,
-        global_condition_cardinality=reader.gc_category_cardinality)
+        global_condition_cardinality=reader.gc_category_cardinality,
+        prob_model_type=args.prob_model_type,
+        sdp_k=args.sdp_k,
+        sdp_lam=args.sdp_lam)
 
     if args.l2_regularization_strength == 0:
         args.l2_regularization_strength = None

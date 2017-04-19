@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
+from tfsdp.models import SmoothedMultiscaleLayer
 from .ops import causal_conv, mu_law_encode
 
 
@@ -56,7 +57,10 @@ class WaveNetModel(object):
                  initial_filter_width=32,
                  histograms=False,
                  global_condition_channels=None,
-                 global_condition_cardinality=None):
+                 global_condition_cardinality=None,
+                 prob_model_type='softmax',
+                 sdp_k=2,
+                 sdp_lam=0.001):
         '''Initializes the WaveNet model.
 
         Args:
@@ -108,6 +112,9 @@ class WaveNetModel(object):
         self.histograms = histograms
         self.global_condition_channels = global_condition_channels
         self.global_condition_cardinality = global_condition_cardinality
+        self.prob_model_type = prob_model_type
+        self.sdp_k = sdp_k
+        self.sdp_lam = sdp_lam
 
         self.receptive_field = WaveNetModel.calculate_receptive_field(
             self.filter_width, self.dilations, self.scalar_input,
@@ -585,9 +592,13 @@ class WaveNetModel(object):
             gc_embedding = self._embed_gc(global_condition)
             raw_output = self._create_network(encoded, gc_embedding)
             out = tf.reshape(raw_output, [-1, self.quantization_channels])
-            # Cast to float64 to avoid bug in TensorFlow
-            proba = tf.cast(
-                tf.nn.softmax(tf.cast(out, tf.float64)), tf.float32)
+            if self.prob_model_type == 'softmax':
+                # Cast to float64 to avoid bug in TensorFlow
+                proba = tf.cast(
+                    tf.nn.softmax(tf.cast(out, tf.float64)), tf.float32)
+            elif self.prob_model_type == 'sdp':
+                self.prob_model.build(out)
+                proba = self.prob_model.density
             last = tf.slice(
                 proba,
                 [tf.shape(proba)[0] - 1, 0],
@@ -611,8 +622,12 @@ class WaveNetModel(object):
             gc_embedding = self._embed_gc(global_condition)
             raw_output = self._create_generator(encoded, gc_embedding)
             out = tf.reshape(raw_output, [-1, self.quantization_channels])
-            proba = tf.cast(
-                tf.nn.softmax(tf.cast(out, tf.float64)), tf.float32)
+            if self.prob_model_type == 'softmax':
+                proba = tf.cast(
+                    tf.nn.softmax(tf.cast(out, tf.float64)), tf.float32)
+            elif self.prob_model_type == 'sdp':
+                self.prob_model.build(out)
+                proba = self.prob_model.density
             last = tf.slice(
                 proba,
                 [tf.shape(proba)[0] - 1, 0],
@@ -628,7 +643,6 @@ class WaveNetModel(object):
 
         The variables are all scoped to the given name.
         '''
-        print 'input batch: ', input_batch
         with tf.name_scope(name):
             # We mu-law encode and quantize the input audioform.
             encoded_input = mu_law_encode(input_batch,
@@ -663,26 +677,34 @@ class WaveNetModel(object):
                                            [-1, self.quantization_channels])
                 prediction = tf.reshape(raw_output,
                                         [-1, self.quantization_channels])
-                loss = tf.nn.softmax_cross_entropy_with_logits(
-                    logits=prediction,
-                    labels=target_output)
-                reduced_loss = tf.reduce_mean(loss)
+                
+                if self.prob_model_type == 'softmax':
+                    loss = tf.nn.softmax_cross_entropy_with_logits(
+                        logits=prediction,
+                        labels=target_output)
+                    train_loss = tf.reduce_mean(loss)
+                elif self.prob_model_type == 'sdp':
+                    self.prob_model = SmoothedMultiscaleLayer(prediction,
+                                                         self.quantization_channels,
+                                                         self.quantization_channels,
+                                                         lam=self.sdp_lam,
+                                                         k=self.sdp_k,
+                                                         one_hot=False)
+                    train_loss = self.prob_model.train_loss
 
                 tf.summary.scalar('loss', reduced_loss)
 
-                if l2_regularization_strength is None:
-                    return reduced_loss
-                else:
+                if l2_regularization_strength is not None:
                     # L2 regularization for all trainable parameters
                     l2_loss = tf.add_n([tf.nn.l2_loss(v)
                                         for v in tf.trainable_variables()
                                         if not('bias' in v.name)])
 
                     # Add the regularization term to the loss
-                    total_loss = (reduced_loss +
+                    train_loss = (reduced_loss +
                                   l2_regularization_strength * l2_loss)
 
                     tf.summary.scalar('l2_loss', l2_loss)
-                    tf.summary.scalar('total_loss', total_loss)
+                    tf.summary.scalar('train_loss', train_loss)
 
-                    return total_loss
+                return train_loss
