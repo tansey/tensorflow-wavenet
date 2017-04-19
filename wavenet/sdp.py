@@ -71,9 +71,7 @@ class FastUnivariateSDP:
         
         # Local trend filtering setup
         self._k = k
-        self._penalty_type = penalty_type
         self._neighbor_radius = neighbor_radius
-        self._neighborhood_dims = 2 * self._neighbor_radius + 1
         self._lam = lam
         
         with tf.variable_scope(scope or type(self).__name__):
