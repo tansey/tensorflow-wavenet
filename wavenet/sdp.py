@@ -65,9 +65,9 @@ class FastUnivariateSDP:
         self.tree = OrdinalTree(np.arange(num_classes))
         self.paths = tf.constant(self.tree.paths, tf.int32)
         self.signs = tf.constant(self.tree.splits * 2 - 1, tf.float32)
-        self.neighborhoods = tf.constant([np.arange(max(0,x - neighbor_radius),
+        self.neighborhoods = tf.constant(np.array([np.arange(max(0,x - neighbor_radius),
                                                     max(0,x - neighbor_radius) + 1 + neighbor_radius*2) 
-                                            for x in np.arange(num_classes)], tf.int32)
+                                            for x in np.arange(num_classes)], dtype=int), tf.int32)
         
         # All splits are done via half-spaces, so there are always 2^k-1 output
         # nodes. We handle non-power-of-two nodes by keeping track of the buffer
