@@ -79,8 +79,8 @@ class FastUnivariateSDP:
             # Bit weird but W is transposed for compatibility with tf.gather
             # See the _compute_sampled_logits function for reference:
             # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/ops/nn_impl.py
-            self._W = weight_variable([self._num_nodes, self._input_layer_size])
-            self._b = bias_variable([self._num_nodes])
+            self._W = weight_variable([self.tree.num_nodes, input_layer_size])
+            self._b = bias_variable([self.tree.num_nodes])
 
     def build(self, input_layer, labels):
         labels = tf.argmax(self._labels, 1)
