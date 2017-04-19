@@ -69,11 +69,6 @@ class FastUnivariateSDP:
                                                     max(0,x - neighbor_radius) + 1 + neighbor_radius*2) 
                                             for x in np.arange(num_classes)], dtype=int), tf.int32)
         
-        # All splits are done via half-spaces, so there are always 2^k-1 output
-        # nodes. We handle non-power-of-two nodes by keeping track of the buffer
-        # sizes vs. the actual multinomial dimensions.
-        self._one_hot = one_hot
-
         # Local trend filtering setup
         self._k = k
         self._penalty_type = penalty_type
