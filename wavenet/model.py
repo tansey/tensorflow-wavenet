@@ -692,7 +692,7 @@ class WaveNetModel(object):
                                                          one_hot=False)
                     train_loss = self.prob_model.train_loss
 
-                tf.summary.scalar('loss', reduced_loss)
+                tf.summary.scalar('loss', train_loss)
 
                 if l2_regularization_strength is not None:
                     # L2 regularization for all trainable parameters
@@ -701,7 +701,7 @@ class WaveNetModel(object):
                                         if not('bias' in v.name)])
 
                     # Add the regularization term to the loss
-                    train_loss = (reduced_loss +
+                    train_loss = (train_loss +
                                   l2_regularization_strength * l2_loss)
 
                     tf.summary.scalar('l2_loss', l2_loss)
