@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from tfsdp.models import SmoothedMultiscaleLayer
+from .sdp import FastUnivariateSDP
 from .ops import causal_conv, mu_law_encode
 
 
@@ -684,14 +684,12 @@ class WaveNetModel(object):
                         labels=target_output)
                     train_loss = tf.reduce_mean(loss)
                 elif self.prob_model_type == 'sdp':
-                    self.prob_model = SmoothedMultiscaleLayer(prediction,
+                    self.prob_model = FastUnivariateSDP(prediction,
                                                          self.quantization_channels,
                                                          self.quantization_channels,
                                                          lam=self.sdp_lam,
-                                                         k=self.sdp_k,
-                                                         one_hot=True)
-                    self.prob_model._labels  = target_output
-                    self.prob_model.build(prediction)
+                                                         k=self.sdp_k)
+                    self.prob_model.build(prediction, target_output)
                     train_loss = self.prob_model.train_loss
 
                 tf.summary.scalar('loss', train_loss)
