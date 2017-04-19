@@ -83,7 +83,7 @@ class FastUnivariateSDP:
             self._b = bias_variable([self.tree.num_nodes])
 
     def build(self, input_layer, labels):
-        labels = tf.argmax(self._labels, 1)
+        labels = tf.argmax(labels, 1)
         nodes = tf.gather(self.paths, labels)
         signs = tf.gather(self.signs, labels)
         W = tf.transpose(tf.gather(self._W, nodes), [0,2,1])
