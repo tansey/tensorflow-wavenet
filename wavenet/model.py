@@ -689,7 +689,8 @@ class WaveNetModel(object):
                                                          self.quantization_channels,
                                                          lam=self.sdp_lam,
                                                          k=self.sdp_k,
-                                                         one_hot=False)
+                                                         one_hot=True)
+                    self.prob_model._labels  = target_output
                     train_loss = self.prob_model.train_loss
 
                 tf.summary.scalar('loss', train_loss)
