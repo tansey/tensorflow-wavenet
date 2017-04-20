@@ -116,7 +116,6 @@ class WaveNetModel(object):
         self.sdp_k = sdp_k
         self.sdp_lam = sdp_lam
         self.prob_model = FastUnivariateSDP(self.quantization_channels,
-                                             self.quantization_channels,
                                              lam=self.sdp_lam,
                                              k=self.sdp_k)
 
