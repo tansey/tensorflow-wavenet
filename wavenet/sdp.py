@@ -114,10 +114,10 @@ class FastUnivariateSDP:
         if self._lam > 0:
             print 'neighborhoods:', self.neighborhoods
             neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
-            neighbor_logprobs = tf.map_fn(lambda n: self._node_logprobs(input_layer, n),
+            neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=2),
                                           neighbors,
                                           dtype=tf.float32)
-            neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0,2])
+            neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
             print 'neighbor logprobs:', neighbor_logprobs
             regularizer = trend_filtering_penalty(neighbor_logprobs,
                                                   self.neighborhoods.get_shape()[1],
