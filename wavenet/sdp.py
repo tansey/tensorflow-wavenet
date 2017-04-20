@@ -84,6 +84,7 @@ class FastUnivariateSDP:
         self.splits = tf.constant(self.tree.splits, tf.int32)
         self.signs = tf.constant(-(self.tree.splits * 2 - 1), tf.float32)
         self.neighborhoods = tf.constant(build_neighborhoods(num_classes, neighbor_radius), tf.int32)
+        self.neighborhood_size = neighbor_radius*2+1
 
         # Local trend filtering setup
         self._k = k
@@ -112,20 +113,22 @@ class FastUnivariateSDP:
         
 
         if self._lam > 0:
-            print 'neighborhoods:', self.neighborhoods
-            neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
-            neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=1),
-                                          neighbors,
-                                          dtype=tf.float32,
-                                          swap_memory=True,
-                                          parallel_iterations=1)
-            neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
-            print 'neighbor logprobs:', neighbor_logprobs
-            regularizer = trend_filtering_penalty(neighbor_logprobs,
-                                                  self.neighborhoods.get_shape()[1],
-                                                  self._k)
+            regularizer = tf.reduce_mean(tf.map_fn(lambda inp, lab: self._trend_filtering(inp, lab), [input_layer, labels]))
             print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
+
+    def _trend_filtering(self, input_layer, labels):
+        input_layer = tf.expand_dims(input_layer, 0)
+        labels = tf.expand_dims(labels, 0)
+
+        neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
+        print 'neighbors', neighbors
+        neighbor_logprobs = tf.reduce_sum(self._node_logprobs(input_layer, neighbors))
+        neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
+        print 'neighbor logprobs:', neighbor_logprobs
+        regularizer = trend_filtering_penalty(neighbor_logprobs,
+                                              self.neighborhoods.get_shape()[1],
+                                              self._k)
 
     def _node_logprobs(self, input_layer, labels):
         nodes = tf.gather(self.paths, labels)
