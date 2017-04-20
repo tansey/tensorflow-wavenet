@@ -153,7 +153,7 @@ class AudioReader(object):
     def dequeue_gc(self, num_elements):
         return self.gc_queue.dequeue_many(num_elements)
 
-    def count_chunks():
+    def count_chunks(self):
         num_chunks = 0
         iterator = load_generic_audio(self.audio_dir, self.sample_rate)
         for audio, filename, category_id in iterator:
