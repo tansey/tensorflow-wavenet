@@ -213,7 +213,7 @@ class AudioReader(object):
                     # Choose a single sample instead
                     mid_audio = audio.shape[0] - self.receptive_field
                     num_samples = int(mid_audio / self.sample_size) + int(mid_audio % self.sample_size > 0)
-                    sample_index = np.random.randint(num_samples)
+                    sample_index = np.random.randint(0,num_samples)
                     sample_start = self.sample_size*sample_index
                     piece = audio[sample_start:sample_start+(self.receptive_field + self.sample_size), :]
                     sess.run(self.enqueue,
