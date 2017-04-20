@@ -114,16 +114,15 @@ class FastUnivariateSDP:
 
         if self._lam > 0:
             print 'inps and labs', input_layer, labels
-            regularizer = tf.reduce_mean(tf.map_fn(lambda (inp, lab): self._trend_filtering(inp, lab), [input_layer, labels]))
+            regularizer = tf.reduce_mean(tf.map_fn(lambda (inp, lab): self._trend_filtering(inp, lab), [input_layer, labels], dtype=tf.float32))
             print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
 
     def _trend_filtering(self, input_layer, labels):
-        input_layer = tf.expand_dims(input_layer, 0)
-        labels = tf.expand_dims(labels, 0)
+        input_layer = tf.reshape(tf.tile(input_layer, [self.neighborhood_size]), [-1,self.input_layer_size])
 
         neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
-        print 'neighbors', neighbors
+        print 'inputs', input_layer, 'neighbors', neighbors
         neighbor_logprobs = tf.reduce_sum(self._node_logprobs(input_layer, neighbors))
         neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
         print 'neighbor logprobs:', neighbor_logprobs
