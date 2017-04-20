@@ -114,7 +114,7 @@ class FastUnivariateSDP:
         if self._lam > 0:
             print 'neighborhoods:', self.neighborhoods
             neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
-            neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=2),
+            neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=1),
                                           neighbors,
                                           dtype=tf.float32)
             neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
