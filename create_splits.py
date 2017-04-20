@@ -17,7 +17,7 @@ def get_arguments():
 def main():
     args = get_arguments()
 
-    files = find_files(args.inputdir, append_root=False)
+    files = find_files(args.inputdir)
 
     indices = np.arange(len(files))
     np.random.shuffle(indices)
