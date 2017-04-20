@@ -60,7 +60,7 @@ def build_neighborhoods(num_classes, neighbor_radius):
     for x in np.arange(num_classes):
         if x < neighbor_radius:
             start = 0
-            end = neighborhood_size + 1
+            end = neighborhood_size
         elif (x + neighbor_radius) >= num_classes:
             start = num_classes - 1 - neighborhood_size
             end = num_classes
