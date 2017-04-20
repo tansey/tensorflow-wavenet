@@ -75,7 +75,8 @@ class FastUnivariateSDP:
     model smooths only a local region around the target node, making it much
     more scalable to larger spaces. This model is sometimes referred to as
     trendfiltering-multiscale elsewhere in the code. '''
-    def __init__(self, input_layer_size, num_classes, 
+    def __init__(self, #input_layer_size,
+                    num_classes, 
                     k=2, lam=0.005, neighbor_radius=5,
                     scope=None, **kwargs):
 
@@ -91,14 +92,41 @@ class FastUnivariateSDP:
         self._neighbor_radius = neighbor_radius
         self._lam = lam
         
-        with tf.variable_scope(scope or type(self).__name__):
-            # Bit weird but W is transposed for compatibility with tf.gather
-            # See the _compute_sampled_logits function for reference:
-            # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/ops/nn_impl.py
-            self._W = weight_variable([self.tree.num_nodes, input_layer_size])
-            self._b = bias_variable([self.tree.num_nodes])
+        # with tf.variable_scope(scope or type(self).__name__):
+        #     # Bit weird but W is transposed for compatibility with tf.gather
+        #     # See the _compute_sampled_logits function for reference:
+        #     # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/ops/nn_impl.py
+        #     self._W = weight_variable([self.tree.num_nodes, input_layer_size])
+        #     self._b = bias_variable([self.tree.num_nodes])
 
-    def build(self, input_layer, labels):
+    def build(self, logits, labels):
+        # Convert from 1-hot
+        labels = tf.argmax(labels, 1)
+
+        # Build the loss functions
+        logprobs = self._node_logprobs(logits, labels)
+        print 'logprobs:', logprobs
+        self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
+        self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
+
+        if self._lam > 0:
+            print 'inps and labs', input_layer, labels
+            regularizer = self._trend_filtering(input_layer, labels)
+            regularizer = tf.Print(regularizer, [self._train_loss, regularizer], message='Loss vs. Regularizer:')
+            print 'regularizer:', regularizer
+            self._train_loss += self._lam * regularizer
+
+    def _logprobs(self, logits, labels):
+        nodes = tf.gather(self.paths, labels)
+        signs = tf.gather(self.signs, labels)
+        logprobs = tf.map_fn(lambda l, n, s: -tf.reduce_sum(tf.log(1 + tf.exp(s * tf.gather(l, n)))), [logits, nodes, signs])
+        return logprobs
+
+    def _trend_filtering(self, logits, labels):
+        neighbors = tf.gather(self.neighborhoods, labels)
+        print 'neighbors', neighbors
+
+    def build_old(self, input_layer, labels):
         # Convert from 1-hot
         labels = tf.argmax(labels, 1)
 
@@ -123,7 +151,7 @@ class FastUnivariateSDP:
             print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
 
-    def _trend_filtering(self, input_layer, labels):
+    def _trend_filtering_old(self, input_layer, labels):
         # Get the neighborhood of classes
         neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
 
@@ -144,7 +172,7 @@ class FastUnivariateSDP:
         #                                       self._k)
         # return regularizer
 
-    def _node_logprobs(self, input_layer, labels):
+    def _node_logprobs_old(self, input_layer, labels):
         nodes = tf.gather(self.paths, labels)
         signs = tf.gather(self.signs, labels)
         W = tf.transpose(tf.gather(self._W, nodes), [0,2,1])
