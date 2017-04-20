@@ -45,7 +45,6 @@ def load_generic_audio(directory, sample_rate):
     '''Generator that yields audio waveforms from the directory.'''
     files = find_files(directory)
     id_reg_exp = re.compile(FILE_PATTERN)
-    print("files length: {}".format(len(files)))
     randomized_files = randomize_files(files)
     for filename in randomized_files:
         ids = id_reg_exp.findall(filename)
@@ -158,26 +157,20 @@ class AudioReader(object):
         iterator = load_generic_audio(self.audio_dir, self.sample_rate)
         for audio, filename, category_id in iterator:
             if self.silence_threshold is not None:
-                    # Remove silence
-                    audio = trim_silence(audio[:, 0], self.silence_threshold)
-                    audio = audio.reshape(-1, 1)
-                    if audio.size == 0:
-                        print("Warning: {} was ignored as it contains only "
-                              "silence. Consider decreasing trim_silence "
-                              "threshold, or adjust volume of the audio."
-                              .format(filename))
+                # Remove silence
+                audio = trim_silence(audio[:, 0], self.silence_threshold)
+                audio = audio.reshape(-1, 1)
+                if audio.size == 0:
+                    print("Warning: {} was ignored as it contains only "
+                          "silence. Consider decreasing trim_silence "
+                          "threshold, or adjust volume of the audio."
+                          .format(filename))
 
             audio = np.pad(audio, [[self.receptive_field, 0], [0, 0]],
                            'constant')
 
             if self.sample_size:
-                # Cut samples into pieces of size receptive_field +
-                # sample_size with receptive_field overlap
-                while len(audio) > self.receptive_field:
-                    piece = audio[:(self.receptive_field +
-                                    self.sample_size), :]
-                    audio = audio[self.sample_size:, :]
-                    num_chunks += 1
+                num_chunks += int(audio.shape[0] / self.sample_size) + int(audio.shape[0] % self.sample_size > 0)
             else:
                 num_chunks += 1
         return num_chunks
