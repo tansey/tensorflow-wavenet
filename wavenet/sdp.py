@@ -91,8 +91,8 @@ class FastUnivariateSDP:
         input_layer = tf.expand_dims(input_layer, 1)
         logits = signs * (tf.reshape(tf.matmul(input_layer, W), [-1, self.tree.path_length]) + b)
         logprobs = -tf.log(1 + tf.exp(logits))
-        self._train_loss = -tf.reduce_mean(logprobs)
-        self._test_loss = -tf.reduce_mean(logprobs)
+        self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
+        self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
 
 
     def dist(self):
