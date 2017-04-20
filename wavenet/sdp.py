@@ -132,7 +132,7 @@ class FastUnivariateSDP:
         logits = tf.matmul(input_layer, W) + b
         left_probs = 1. / (1. + tf.exp(-logits))
 
-        probs = tf.map_fn(lambda x: tf.prod(tf.where(self.signs < 0, tf.gather(x, self.paths), 1 - tf.gather(x, self.paths)), axis=1), left_probs)
+        probs = tf.map_fn(lambda x: tf.reduce_prod(tf.where(self.signs < 0, tf.gather(x, self.paths), 1 - tf.gather(x, self.paths)), axis=1), left_probs)
         probs = probs / tf.reduce_sum(probs, axis=1, keep_dims=True)
         return probs
 
