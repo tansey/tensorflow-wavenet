@@ -213,10 +213,13 @@ class AudioReader(object):
                     # Choose a single sample instead
                     mid_audio = audio.shape[0] - self.receptive_field
                     num_samples = int(mid_audio / self.sample_size) + int(mid_audio % self.sample_size > 0)
-                    print num_samples
-                    sample_index = np.random.randint(0,num_samples)
-                    sample_start = self.sample_size*sample_index
-                    piece = audio[sample_start:sample_start+(self.receptive_field + self.sample_size), :]
+                    if num_samples == 0:
+                        continue
+                    else:
+                        sample_index = np.random.randint(0,num_samples)
+                        sample_start = self.sample_size*sample_index
+                        sample_end = sample_start+(self.receptive_field + self.sample_size)
+                    piece = audio[sample_start:sample_end, :]
                     sess.run(self.enqueue,
                              feed_dict={self.sample_placeholder: piece})
                     if self.gc_enabled:
