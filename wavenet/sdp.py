@@ -112,7 +112,7 @@ class FastUnivariateSDP:
         if self._lam > 0:
             print 'inps and labs', logits, labels
             regularizer = self._trend_filtering(logits, labels)
-            regularizer = tf.Print(regularizer, [self._train_loss, regularizer], message='Loss vs. Regularizer:')
+            # regularizer = tf.Print(regularizer, [self._train_loss, regularizer], message='Loss vs. Regularizer:')
             print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
 
