@@ -118,10 +118,10 @@ class FastUnivariateSDP:
             print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
 
-    def _trend_filtering(self, input_layer, labels):
-        input_layer = tf.reshape(tf.tile(input_layer, [self.neighborhood_size]), [-1,self.input_layer_size])
+    def _trend_filtering(self, input_layer, label):
+        input_layer = tf.reshape(tf.tile(input_layer, [self.neighborhood_size]), [self.neighborhood_size,-1])
 
-        neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
+        neighbors = tf.transpose(tf.gather(self.neighborhoods, label))
         print 'inputs', input_layer, 'neighbors', neighbors
         neighbor_logprobs = tf.reduce_sum(self._node_logprobs(input_layer, neighbors))
         neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
