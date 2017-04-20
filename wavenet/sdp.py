@@ -106,6 +106,7 @@ class FastUnivariateSDP:
 
         # Build the loss functions
         logprobs = self._node_logprobs(input_layer, labels)
+        print 'logprobs:', logprobs
         self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
         self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
         
@@ -113,7 +114,9 @@ class FastUnivariateSDP:
         if self._lam > 0:
             print 'neighborhoods:', self.neighborhoods
             neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
-            neighbor_logprobs = tf.map_fn(lambda n: self._node_logprobs(input_layer, n), neighbors)
+            neighbor_logprobs = tf.map_fn(lambda n: self._node_logprobs(input_layer, n),
+                                          neighbors,
+                                          dtype=tf.float32)
             neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0,2])
             print 'neighbor logprobs:', neighbor_logprobs
             regularizer = trend_filtering_penalty(neighbor_logprobs,
