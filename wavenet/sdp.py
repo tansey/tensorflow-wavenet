@@ -119,12 +119,15 @@ class FastUnivariateSDP:
     def _logprobs(self, logits, labels):
         nodes = tf.gather(self.paths, labels)
         signs = tf.gather(self.signs, labels)
-        logprobs = tf.map_fn(lambda l, n, s: -tf.reduce_sum(tf.log(1 + tf.exp(s * tf.gather(l, n)))), [logits, nodes, signs])
+        logprobs = tf.map_fn(lambda l, n, s: -tf.reduce_sum(tf.log(1 + tf.exp(s * tf.gather(l, n))), axis=-1), [logits, nodes, signs])
         return logprobs
 
     def _trend_filtering(self, logits, labels):
-        neighbors = tf.gather(self.neighborhoods, labels)
+        neighbors = tf.gather(self.neighborhoods, labels) # [batchsize, neighborhood_size]
+        results = self._logprobs(logits, neighbors)
         print 'neighbors', neighbors
+        print 'results', results
+        return results
 
     def build_old(self, input_layer, labels):
         # Convert from 1-hot
