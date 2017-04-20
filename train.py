@@ -363,13 +363,13 @@ def main():
                 print('Evaluating against test set')
                 sys.stdout.flush()
                 test_logprobs = 0
-                for test_file_idx in xrange(test_reader.num_files):
+                for test_file_idx in xrange(test_reader.num_chunks):
                     cur_logprobs = sess.run(test_loss)
                     test_logprobs += cur_logprobs
                     if test_file_idx % 100 == 0:
                         print('Test file {} logprobs: {}'.format(test_file_idx, cur_logprobs))
                         sys.stdout.flush()
-                test_logprobs /= float(test_reader.num_files)
+                test_logprobs /= float(test_reader.num_chunks)
                 print('Test score: {:.3f}'.format(test_logprobs))
                 sys.stdout.flush()
 

@@ -121,7 +121,6 @@ class AudioReader(object):
         # Checking inside the AudioReader's thread makes it hard to terminate
         # the execution of the script, so we do it in the constructor for now.
         files = find_files(audio_dir)
-        self.num_files = len(files)
         if not files:
             raise ValueError("No audio files found in '{}'.".format(audio_dir))
         if self.gc_enabled and not_all_have_id(files):
@@ -144,12 +143,44 @@ class AudioReader(object):
         else:
             self.gc_category_cardinality = None
 
+        self.num_files = len(files)
+        self.num_chunks = self.count_chunks()
+
     def dequeue(self, num_elements):
         output = self.queue.dequeue_many(num_elements)
         return output
 
     def dequeue_gc(self, num_elements):
         return self.gc_queue.dequeue_many(num_elements)
+
+    def count_chunks():
+        num_chunks = 0
+        iterator = load_generic_audio(self.audio_dir, self.sample_rate)
+        for audio, filename, category_id in iterator:
+            if self.silence_threshold is not None:
+                    # Remove silence
+                    audio = trim_silence(audio[:, 0], self.silence_threshold)
+                    audio = audio.reshape(-1, 1)
+                    if audio.size == 0:
+                        print("Warning: {} was ignored as it contains only "
+                              "silence. Consider decreasing trim_silence "
+                              "threshold, or adjust volume of the audio."
+                              .format(filename))
+
+            audio = np.pad(audio, [[self.receptive_field, 0], [0, 0]],
+                           'constant')
+
+            if self.sample_size:
+                # Cut samples into pieces of size receptive_field +
+                # sample_size with receptive_field overlap
+                while len(audio) > self.receptive_field:
+                    piece = audio[:(self.receptive_field +
+                                    self.sample_size), :]
+                    audio = audio[self.sample_size:, :]
+                    num_chunks += 1
+            else:
+                num_chunks += 1
+        return num_chunks
 
     def thread_main(self, sess):
         stop = False
