@@ -88,7 +88,8 @@ class FastUnivariateSDP:
         signs = tf.gather(self.signs, labels)
         W = tf.transpose(tf.gather(self._W, nodes), [0,2,1])
         b = tf.gather(self._b, nodes)
-        logits = signs * (tf.matmul(input_layer, W) + b)
+        input_layer = tf.expand_dims(input_layer, 1)
+        logits = signs * (tf.reshape(tf.matmul(input_layer, W), [-1, self.tree.path_length]) + b)
         logprobs = -tf.log(1 + tf.exp(logits))
         self._train_loss = logprobs
         self._test_loss = logprobs
