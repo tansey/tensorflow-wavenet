@@ -54,6 +54,23 @@ class OrdinalTree(BallTree):
         splitmask = subdata > np.median(subdata)
         return splitmask
 
+def build_neighborhoods(num_classes, neighbor_radius):
+    neighborhood_size = 2 * neighbor_radius + 1
+    neighborhoods = np.zeros((num_classes, neighborhood_size), dtype=int)
+    for x in np.arange(num_classes):
+        if x < neighbor_radius:
+            start = 0
+            end = neighborhood_size + 1
+        elif (x + neighbor_radius) >= num_classes:
+            start = num_classes - 1 - neighborhood_size
+            end = num_classes
+        else:
+            start = x - neighbor_radius
+            end = x + neighbor_radius + 1
+        neighborhoods[x] = np.arange(start, end)
+        print '{} : [{},{})'.format(x, start, end)
+    return neighborhoods
+
 class FastUnivariateSDP:
     '''A dyadic decomposition model with trend filtering on the logits. This
     model smooths only a local region around the target node, making it much
@@ -66,13 +83,9 @@ class FastUnivariateSDP:
         self.tree = OrdinalTree(np.arange(num_classes))
         self.paths = tf.constant(self.tree.paths, tf.int32)
         self.signs = tf.constant(self.tree.splits * 2 - 1, tf.float32)
-        self.neighborhoods = tf.constant(np.array([np.arange(max(0,x - neighbor_radius),
-                                                    max(0,x - neighbor_radius) + 1 + neighbor_radius*2) 
-                                            for x in np.arange(num_classes)], dtype=int), tf.int32)
+        self.neighborhoods = tf.constant(build_neighborhoods(num_classes, neighbor_radius),, tf.int32)
 
-        print np.array([np.arange(max(0,x - neighbor_radius),
-                                                    max(0,x - neighbor_radius) + 1 + neighbor_radius*2) 
-                                            for x in np.arange(num_classes)], dtype=int)
+        
         
         # Local trend filtering setup
         self._k = k
