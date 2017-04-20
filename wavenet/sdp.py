@@ -119,7 +119,7 @@ class FastUnivariateSDP:
                                               neighbors,
                                               dtype=tf.float32)
                 neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
-            print 'neighbor logprobs:', neighbor_logprobs
+                print 'neighbor logprobs:', neighbor_logprobs
                 regularizer = trend_filtering_penalty(neighbor_logprobs,
                                                       self.neighborhoods.get_shape()[1],
                                                       self._k)
