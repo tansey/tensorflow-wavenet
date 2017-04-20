@@ -115,16 +115,17 @@ class FastUnivariateSDP:
         self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
         
 
-        # if self._lam > 0:
-        #     neighbors = tf.gather(self.neighborhoods, labels)
-        #     nodes = tf.gather(self.paths, neighbors)
-        #     signs = tf.gather(self.signs, neighbors)
-        #     W = tf.transpose(tf.gather(self._W, nodes), [0,1,3,2])
-        #     b = tf.gather(self._b, nodes)
-        #     input_layer = tf.expand_dims(input_layer, 1)
-        #     self._reg = trend_filtering_penalty(self.,
-        #         self.neighborhoods.get_shape()[1],
-        #         self._k)
+        if self._lam > 0:
+            neighbors = tf.gather(self.neighborhoods, labels)
+            print neighbors
+            nodes = tf.gather(self.paths, neighbors)
+            signs = tf.gather(self.signs, neighbors)
+            W = tf.transpose(tf.gather(self._W, nodes), [0,1,3,2])
+            b = tf.gather(self._b, nodes)
+            input_layer = tf.expand_dims(input_layer, 1)
+            # self._reg = trend_filtering_penalty(self.,
+            #     self.neighborhoods.get_shape()[1],
+            #     self._k)
 
     def _build_density(self, input_layer):
         W = tf.transpose(self._W)
