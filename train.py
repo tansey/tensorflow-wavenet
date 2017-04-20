@@ -109,6 +109,8 @@ def get_arguments():
                         help='(if using SDP outputs) k value for trend filtering regularizer. Default: 2')
     parser.add_argument('--sdp_lam', type=float, default=0.001,
                         help='(if using SDP outputs) lambda value for trend filtering regularizer. Default: 0.001')
+    parser.add_argument('--test_freq', type=int, default=100,
+                        help='How frequently to record test performance.')
     return parser.parse_args()
 
 
@@ -221,8 +223,8 @@ def main():
         silence_threshold = args.silence_threshold if args.silence_threshold > \
                                                       EPSILON else None
         gc_enabled = args.gc_channels is not None
-        reader = AudioReader(
-            args.data_dir,
+        train_reader = AudioReader(
+            os.path.join(args.data_dir, 'train'),
             coord,
             sample_rate=wavenet_params['sample_rate'],
             gc_enabled=gc_enabled,
@@ -232,11 +234,28 @@ def main():
                                                                    wavenet_params["initial_filter_width"]),
             sample_size=args.sample_size,
             silence_threshold=silence_threshold)
-        audio_batch = reader.dequeue(args.batch_size)
+        audio_batch = train_reader.dequeue(args.batch_size)
         if gc_enabled:
-            gc_id_batch = reader.dequeue_gc(args.batch_size)
+            gc_id_batch = train_reader.dequeue_gc(args.batch_size)
         else:
             gc_id_batch = None
+        test_reader = AudioReader(
+            os.path.join(args.data_dir, 'test'),
+            coord,
+            sample_rate=wavenet_params['sample_rate'],
+            gc_enabled=gc_enabled,
+            receptive_field=WaveNetModel.calculate_receptive_field(wavenet_params["filter_width"],
+                                                                   wavenet_params["dilations"],
+                                                                   wavenet_params["scalar_input"],
+                                                                   wavenet_params["initial_filter_width"]),
+            sample_size=args.sample_size,
+            silence_threshold=silence_threshold)
+        test_audio_batch = test_reader.dequeue(args.batch_size)
+        if gc_enabled:
+            test_gc_id_batch = test_reader.dequeue_gc(args.batch_size)
+        else:
+            test_gc_id_batch = None
+        
 
     # Create network.
     net = WaveNetModel(
@@ -252,7 +271,7 @@ def main():
         initial_filter_width=wavenet_params["initial_filter_width"],
         histograms=args.histograms,
         global_condition_channels=args.gc_channels,
-        global_condition_cardinality=reader.gc_category_cardinality,
+        global_condition_cardinality=train_reader.gc_category_cardinality,
         prob_model_type=args.prob_model_type,
         sdp_k=args.sdp_k,
         sdp_lam=args.sdp_lam)
@@ -267,6 +286,11 @@ def main():
                     momentum=args.momentum)
     trainable = tf.trainable_variables()
     optim = optimizer.minimize(loss, var_list=trainable)
+
+    test_loss = net.loss(input_batch=audio_batch,
+                    global_condition_batch=gc_id_batch,
+                    l2_regularization_strength=args.l2_regularization_strength,
+                    use_test_loss=True)
 
     # Set up logging for TensorBoard.
     writer = tf.summary.FileWriter(logdir)
@@ -296,7 +320,8 @@ def main():
         raise
 
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-    reader.start_threads(sess)
+    train_reader.start_threads(sess)
+    test_reader.start_threads(sess)
 
     step = None
     last_saved_step = saved_global_step
@@ -330,6 +355,13 @@ def main():
             if step % args.checkpoint_every == 0:
                 save(saver, sess, logdir, step)
                 last_saved_step = step
+            if step % args.test_freq == 0:
+                print('Evaluating against test set')
+                test_logprobs = 0
+                for _ in xrange(test_reader.num_files):
+                    test_logprobs += sess.run(test_loss)
+                test_logprobs /= float(test_reader.num_files)
+                print('Test score: {:.3f}'.format(test_logprobs))
 
     except KeyboardInterrupt:
         # Introduce a line break after ^C is displayed so save message

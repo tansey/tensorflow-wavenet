@@ -121,6 +121,7 @@ class AudioReader(object):
         # Checking inside the AudioReader's thread makes it hard to terminate
         # the execution of the script, so we do it in the constructor for now.
         files = find_files(audio_dir)
+        self.num_files = len(files)
         if not files:
             raise ValueError("No audio files found in '{}'.".format(audio_dir))
         if self.gc_enabled and not_all_have_id(files):

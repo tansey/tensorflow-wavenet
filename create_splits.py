@@ -33,12 +33,10 @@ def main():
     if not os.path.exists(test_dir):
         os.makedirs(test_dir)
 
-    for t in train_indices:
+    for i,t in enumerate(train_indices):
         src = os.path.join(args.inputdir, files[t])
         dest = os.path.join(train_dir, files[t].replace(args.inputdir, '')[1:])
-        print src
-        print dest
-        print os.path.dirname(dest)
+        print i, files[t]
         if not os.path.exists(os.path.dirname(dest)):
             os.makedirs(os.path.dirname(dest))
         copyfile(src, dest)
