@@ -143,7 +143,7 @@ class AudioReader(object):
             self.gc_category_cardinality = None
 
         self.num_files = len(files)
-        self.num_chunks = self.count_chunks()
+        # self.num_chunks = self.count_chunks()
 
     def dequeue(self, num_elements):
         output = self.queue.dequeue_many(num_elements)
