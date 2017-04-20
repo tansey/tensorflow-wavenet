@@ -35,7 +35,7 @@ def main():
 
     for t in train_indices:
         src = os.path.join(args.inputdir, files[t])
-        dest = os.path.join(args.outputdir, files[t].replace(args.inputdir, ''))
+        dest = os.path.join(train_dir, files[t].replace(args.inputdir, ''))
         print src
         print dest
         print os.path.dirname(dest)
