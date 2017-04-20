@@ -123,9 +123,15 @@ class FastUnivariateSDP:
             self._train_loss += self._lam * regularizer
 
     def _trend_filtering(self, input_layer, labels):
-        neighbors = tf.gather(self.neighborhoods, labels)
-        print neighbors
+        # Get the neighborhood of classes
+        neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
 
+        # Get the log probability of each class
+        neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=1), neighbors)
+        neighbor_logprobs = tf.transpose(neighbor_logprobs)
+
+        # Calculate the 1d trend filtering penalty
+        return trend_filtering_penalty(neighbor_logprobs, self.neighborhoods.get_shape()[1], self._k)
 
         # neighbors = tf.transpose(tf.gather(self.neighborhoods, label))
         # print 'inputs', input_layer, 'neighbors', neighbors
