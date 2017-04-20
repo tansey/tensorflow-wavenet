@@ -365,8 +365,7 @@ def main():
                 print('Evaluating against test set')
                 sys.stdout.flush()
                 test_logprobs = 0
-                APPROX_FILE_SIZE=100000
-                num_test = int(test_reader.num_files * (APPROX_FILE_SIZE / args.sample_size))
+                num_test = test_reader.num_files
                 for test_file_idx in xrange(num_test):
                     cur_logprobs = sess.run(test_loss)
                     test_logprobs += cur_logprobs
