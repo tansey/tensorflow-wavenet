@@ -43,6 +43,7 @@ def find_files(directory, pattern='*.wav'):
 def load_generic_audio(directory, sample_rate):
     '''Generator that yields audio waveforms from the directory.'''
     files = find_files(directory)
+    print('Loading {} audio files'.format(len(files)))
     id_reg_exp = re.compile(FILE_PATTERN)
     randomized_files = randomize_files(files)
     for filename in randomized_files:
