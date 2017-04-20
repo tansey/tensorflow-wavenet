@@ -36,11 +36,15 @@ def main():
     for t in train_indices:
         src = os.path.join(args.inputdir, files[t])
         dest = os.path.join(train_dir, files[t].replace(args.inputdir, ''))
+        if not os.path.exists(os.path.dirname(dest)):
+            os.makedirs(os.path.dirname(dest))
         copyfile(src, dest)
 
     for t in test_indices:
         src = os.path.join(args.inputdir, files[t])
         dest = os.path.join(test_dir, files[t].replace(args.inputdir, ''))
+        if not os.path.exists(os.path.dirname(dest)):
+            os.makedirs(os.path.dirname(dest))
         copyfile(src, dest)
 
 if __name__ == '__main__':
