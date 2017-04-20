@@ -351,6 +351,7 @@ def main():
             duration = time.time() - start_time
             print('step {:d} - loss = {:.3f}, ({:.3f} sec/step)'
                   .format(step, loss_value, duration))
+            sys.stdout.flush()
 
             if step % args.checkpoint_every == 0:
                 save(saver, sess, logdir, step)
@@ -360,8 +361,9 @@ def main():
                 test_logprobs = 0
                 for test_file_idx in xrange(test_reader.num_files):
                     cur_logprobs = sess.run(test_loss)
-                    print('Test file {} logprobs: {}'.format(test_file_idx, cur_logprobs))
                     test_logprobs += cur_logprobs
+                    if test_file_idx % 100 == 0:
+                        print('Test file {} logprobs: {}'.format(test_file_idx, cur_logprobs))
                 test_logprobs /= float(test_reader.num_files)
                 print('Test score: {:.3f}'.format(test_logprobs))
 
