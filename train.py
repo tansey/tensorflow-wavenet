@@ -359,14 +359,17 @@ def main():
                 last_saved_step = step
             if step > 0 and step % args.test_freq == 0:
                 print('Evaluating against test set')
+                sys.stdout.flush()
                 test_logprobs = 0
                 for test_file_idx in xrange(test_reader.num_files):
                     cur_logprobs = sess.run(test_loss)
                     test_logprobs += cur_logprobs
                     if test_file_idx % 100 == 0:
                         print('Test file {} logprobs: {}'.format(test_file_idx, cur_logprobs))
+                        sys.stdout.flush()
                 test_logprobs /= float(test_reader.num_files)
                 print('Test score: {:.3f}'.format(test_logprobs))
+                sys.stdout.flush()
 
     except KeyboardInterrupt:
         # Introduce a line break after ^C is displayed so save message
