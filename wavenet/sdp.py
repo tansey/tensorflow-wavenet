@@ -98,6 +98,9 @@ class FastUnivariateSDP:
             self._b = bias_variable([self.tree.num_nodes])
 
     def build(self, input_layer, labels):
+        # Convert from 1-hot
+        labels = tf.argmax(labels, 1)
+
         # Build the predictive density function
         self._density = self._build_density(input_layer)
 
@@ -108,6 +111,7 @@ class FastUnivariateSDP:
         
 
         if self._lam > 0:
+            print 'neighborhoods:', self.neighborhoods
             neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
             neighbor_logprobs = tf.map_fn(lambda n: self._node_logprobs(input_layer, n), neighbors)
             neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0,2])
@@ -115,11 +119,10 @@ class FastUnivariateSDP:
             regularizer = trend_filtering_penalty(neighbor_logprobs,
                                                   self.neighborhoods.get_shape()[1],
                                                   self._k)
-            print 'regularizer: ', regularizer
+            print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
 
     def _node_logprobs(self, input_layer, labels):
-        labels = tf.argmax(labels, 1)
         nodes = tf.gather(self.paths, labels)
         signs = tf.gather(self.signs, labels)
         W = tf.transpose(tf.gather(self._W, nodes), [0,2,1])
