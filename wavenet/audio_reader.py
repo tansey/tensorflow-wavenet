@@ -1,6 +1,5 @@
 import fnmatch
 import os
-import random
 import re
 import threading
 
@@ -27,9 +26,9 @@ def get_category_cardinality(files):
 
 
 def randomize_files(files):
-    for file in files:
-        file_index = random.randint(0, (len(files) - 1))
-        yield files[file_index]
+    indices = np.permutation(len(files))
+    for index in indices:
+        yield files[index]
 
 
 def find_files(directory, pattern='*.wav'):

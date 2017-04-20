@@ -195,6 +195,7 @@ def validate_directories(args):
 
 
 def main():
+    np.random.seed(42) # Fix this for reproducibility
     args = get_arguments()
 
     try:
