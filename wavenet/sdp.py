@@ -98,6 +98,10 @@ class FastUnivariateSDP:
             self._b = bias_variable([self.tree.num_nodes])
 
     def build(self, input_layer, labels):
+        # Build the predictive density function
+        self._density = self._build_density(input_layer)
+
+        # Build the loss functions
         labels = tf.argmax(labels, 1)
         nodes = tf.gather(self.paths, labels)
         signs = tf.gather(self.signs, labels)
@@ -109,7 +113,7 @@ class FastUnivariateSDP:
 
         self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
         self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
-        self._density = self._build_density(input_layer)
+        
 
         # if self._lam > 0:
         #     neighbors = tf.gather(self.neighborhoods, labels)
