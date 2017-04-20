@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Training script for the WaveNet network on the VCTK corpus.
 
 This script trains a network with the WaveNet using data from the VCTK corpus,
