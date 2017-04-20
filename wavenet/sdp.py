@@ -67,7 +67,6 @@ def build_neighborhoods(num_classes, neighbor_radius):
         else:
             start = x - neighbor_radius
             end = x + neighbor_radius + 1
-        print '{} : [{},{})'.format(x, start, end)
         neighborhoods[x] = np.arange(start, end)
     return neighborhoods
 
@@ -76,17 +75,16 @@ class FastUnivariateSDP:
     model smooths only a local region around the target node, making it much
     more scalable to larger spaces. This model is sometimes referred to as
     trendfiltering-multiscale elsewhere in the code. '''
-    def __init__(self, input_layer, input_layer_size, num_classes, 
+    def __init__(self, input_layer_size, num_classes, 
                     k=2, lam=0.005, neighbor_radius=5,
                     scope=None, **kwargs):
 
         self.tree = OrdinalTree(np.arange(num_classes))
         self.paths = tf.constant(self.tree.paths, tf.int32)
-        self.signs = tf.constant(self.tree.splits * 2 - 1, tf.float32)
+        self.splits = tf.constant(self.tree.splits, tf.int32)
+        self.signs = tf.constant(-(self.tree.splits * 2 - 1), tf.float32)
         self.neighborhoods = tf.constant(build_neighborhoods(num_classes, neighbor_radius), tf.int32)
 
-        
-        
         # Local trend filtering setup
         self._k = k
         self._neighbor_radius = neighbor_radius
@@ -108,24 +106,35 @@ class FastUnivariateSDP:
         input_layer = tf.expand_dims(input_layer, 1)
         logits = signs * (tf.reshape(tf.matmul(input_layer, W), [-1, self.tree.path_length]) + b)
         logprobs = -tf.log(1 + tf.exp(logits))
+
         self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
         self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
+        self._density = self._build_density(input_layer)
 
+        # if self._lam > 0:
+        #     neighbors = tf.gather(self.neighborhoods, labels)
+        #     nodes = tf.gather(self.paths, neighbors)
+        #     signs = tf.gather(self.signs, neighbors)
+        #     W = tf.transpose(tf.gather(self._W, nodes), [0,1,3,2])
+        #     b = tf.gather(self._b, nodes)
+        #     input_layer = tf.expand_dims(input_layer, 1)
+        #     self._reg = trend_filtering_penalty(self.,
+        #         self.neighborhoods.get_shape()[1],
+        #         self._k)
 
-    def dist(self):
-        return self._density
+    def _build_density(self, input_layer):
+        W = tf.transpose(self._W)
+        b = self._b
+        logits = tf.matmul(input_layer, W) + b
+        left_probs = 1. / (1. + tf.exp(-logits))
 
-    @property
-    def labels(self):
-        return None
+        probs = tf.map_fn(lambda x: tf.prod(tf.where(self.signs < 0, tf.gather(x, self.paths), 1 - tf.gather(x, self.paths)), axis=1), left_probs)
+        probs = probs / tf.reduce_sum(probs, axis=1, keep_dims=True)
+        return probs
 
     @property
     def density(self):
         return self._density
-
-    @property
-    def output(self):
-        return None
 
     @property
     def train_loss(self):
