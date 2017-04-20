@@ -358,8 +358,10 @@ def main():
             if step % args.test_freq == 0:
                 print('Evaluating against test set')
                 test_logprobs = 0
-                for _ in xrange(test_reader.num_files):
-                    test_logprobs += sess.run(test_loss)
+                for test_file_idx in xrange(test_reader.num_files):
+                    cur_logprobs = sess.run(test_loss)
+                    print('Test file {} logprobs: {}'.format(test_file_idx, cur_logprobs))
+                    test_logprobs += cur_logprobs
                 test_logprobs /= float(test_reader.num_files)
                 print('Test score: {:.3f}'.format(test_logprobs))
 
