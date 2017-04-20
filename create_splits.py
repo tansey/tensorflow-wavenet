@@ -26,8 +26,8 @@ def main():
     train_indices = indices[:end_train]
     test_indices = indices[end_train:]
 
-    train_dir = os.path.join(args.outputdir, 'train')
-    test_dir = os.path.join(args.outputdir, 'test')
+    train_dir = os.path.join(os.path.abspath(args.outputdir), 'train')
+    test_dir = os.path.join(os.path.abspath(args.outputdir), 'test')
     if not os.path.exists(train_dir):
         os.makedirs(train_dir)
     if not os.path.exists(test_dir):
@@ -35,7 +35,10 @@ def main():
 
     for t in train_indices:
         src = os.path.join(args.inputdir, files[t])
-        dest = os.path.join(train_dir, files[t].replace(args.inputdir, ''))
+        dest = os.path.join(args.outputdir, files[t].replace(args.inputdir, ''))
+        print src
+        print dest
+        print os.path.dirname(dest)
         if not os.path.exists(os.path.dirname(dest)):
             os.makedirs(os.path.dirname(dest))
         copyfile(src, dest)
