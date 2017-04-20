@@ -67,8 +67,8 @@ def build_neighborhoods(num_classes, neighbor_radius):
         else:
             start = x - neighbor_radius
             end = x + neighbor_radius + 1
-        neighborhoods[x] = np.arange(start, end)
         print '{} : [{},{})'.format(x, start, end)
+        neighborhoods[x] = np.arange(start, end)
     return neighborhoods
 
 class FastUnivariateSDP:
