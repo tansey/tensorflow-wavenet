@@ -26,7 +26,7 @@ def get_category_cardinality(files):
 
 
 def randomize_files(files):
-    indices = np.permutation(len(files))
+    indices = np.random.permutation(len(files))
     for index in indices:
         yield files[index]
 
