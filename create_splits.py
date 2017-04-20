@@ -8,7 +8,7 @@ def get_arguments():
     parser = argparse.ArgumentParser(description='Create train and test splits for wavenet data.')
     parser.add_argument('inputdir', type=str,
                         help='The directory where all the wav files are stored.')
-        parser.add_argument('outputdir', type=str,
+    parser.add_argument('outputdir', type=str,
                         help='The directory where all the wav files are stored.')
     parser.add_argument('--testpct', type=float, default=0.1,
                         help='The percentage of files to hold out for testing.')
