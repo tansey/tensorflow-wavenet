@@ -691,6 +691,7 @@ class WaveNetModel(object):
                                                          k=self.sdp_k)
                     self.prob_model.build(prediction, target_output)
                     train_loss = self.prob_model.train_loss
+                    print 'loss: ', train_loss
 
                 tf.summary.scalar('loss', train_loss)
 
