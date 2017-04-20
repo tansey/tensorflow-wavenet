@@ -684,8 +684,7 @@ class WaveNetModel(object):
                         labels=target_output)
                     train_loss = tf.reduce_mean(loss)
                 elif self.prob_model_type == 'sdp':
-                    self.prob_model = FastUnivariateSDP(prediction,
-                                                         self.quantization_channels,
+                    self.prob_model = FastUnivariateSDP(self.quantization_channels,
                                                          self.quantization_channels,
                                                          lam=self.sdp_lam,
                                                          k=self.sdp_k)
