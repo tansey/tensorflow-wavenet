@@ -113,10 +113,14 @@ class FastUnivariateSDP:
         
 
         if self._lam > 0:
-            print 'inps and labs', input_layer, labels
-            regularizer = tf.reduce_mean(tf.map_fn(lambda (inp, lab): self._trend_filtering(inp, lab), [input_layer, labels], dtype=tf.float32))
-            print 'regularizer:', regularizer
-            self._train_loss += self._lam * regularizer
+            with tf.device('cpu:0'):
+                print 'inps and labs', input_layer, labels
+                regularizer = tf.reduce_mean(tf.map_fn(lambda (inp, lab): self._trend_filtering(inp, lab),
+                                                [input_layer, labels],
+                                                dtype=tf.float32,
+                                                parallel_iterations=50000))
+                print 'regularizer:', regularizer
+                self._train_loss += self._lam * regularizer
 
     def _trend_filtering(self, input_layer, label):
         input_layer = tf.reshape(tf.tile(input_layer, [self.neighborhood_size]), [self.neighborhood_size,-1])

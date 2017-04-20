@@ -301,7 +301,7 @@ def main():
 
     # Set up session
     config_proto = tf.ConfigProto(log_device_placement=False)
-    config_proto.gpu_options.allow_growth = True
+    # config_proto.gpu_options.allow_growth = True
     sess = tf.Session(config=config_proto)
     init = tf.global_variables_initializer()
     sess.run(init)
