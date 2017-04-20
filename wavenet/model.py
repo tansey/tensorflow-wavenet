@@ -115,6 +115,10 @@ class WaveNetModel(object):
         self.prob_model_type = prob_model_type
         self.sdp_k = sdp_k
         self.sdp_lam = sdp_lam
+        self.prob_model = FastUnivariateSDP(self.quantization_channels,
+                                             self.quantization_channels,
+                                             lam=self.sdp_lam,
+                                             k=self.sdp_k)
 
         self.receptive_field = WaveNetModel.calculate_receptive_field(
             self.filter_width, self.dilations, self.scalar_input,
@@ -638,6 +642,7 @@ class WaveNetModel(object):
              input_batch,
              global_condition_batch=None,
              l2_regularization_strength=None,
+             use_test_loss=False,
              name='wavenet'):
         '''Creates a WaveNet network and returns the autoencoding loss.
 
@@ -682,29 +687,24 @@ class WaveNetModel(object):
                     loss = tf.nn.softmax_cross_entropy_with_logits(
                         logits=prediction,
                         labels=target_output)
-                    train_loss = tf.reduce_mean(loss)
+                    total_loss = tf.reduce_mean(loss)
                 elif self.prob_model_type == 'sdp':
-                    self.prob_model = FastUnivariateSDP(self.quantization_channels,
-                                                         self.quantization_channels,
-                                                         lam=self.sdp_lam,
-                                                         k=self.sdp_k)
                     self.prob_model.build(prediction, target_output)
-                    train_loss = self.prob_model.train_loss
-                    print 'loss: ', train_loss
+                    total_loss = self.prob_model.train_loss if not use_test_loss else self.prob_model.test_loss
 
-                tf.summary.scalar('loss', train_loss)
+                tf.summary.scalar('loss', total_loss)
 
-                if l2_regularization_strength is not None:
+                if not use_test_loss and l2_regularization_strength is not None:
                     # L2 regularization for all trainable parameters
                     l2_loss = tf.add_n([tf.nn.l2_loss(v)
                                         for v in tf.trainable_variables()
                                         if not('bias' in v.name)])
 
                     # Add the regularization term to the loss
-                    train_loss = (train_loss +
+                    total_loss = (total_loss +
                                   l2_regularization_strength * l2_loss)
 
                     tf.summary.scalar('l2_loss', l2_loss)
-                    tf.summary.scalar('train_loss', train_loss)
+                    tf.summary.scalar('total_loss', total_loss)
 
-                return train_loss
+                return total_loss
