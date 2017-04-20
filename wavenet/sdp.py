@@ -69,6 +69,10 @@ class FastUnivariateSDP:
         self.neighborhoods = tf.constant(np.array([np.arange(max(0,x - neighbor_radius),
                                                     max(0,x - neighbor_radius) + 1 + neighbor_radius*2) 
                                             for x in np.arange(num_classes)], dtype=int), tf.int32)
+
+        print np.array([np.arange(max(0,x - neighbor_radius),
+                                                    max(0,x - neighbor_radius) + 1 + neighbor_radius*2) 
+                                            for x in np.arange(num_classes)], dtype=int)
         
         # Local trend filtering setup
         self._k = k
