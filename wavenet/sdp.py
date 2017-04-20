@@ -62,7 +62,7 @@ def build_neighborhoods(num_classes, neighbor_radius):
             start = 0
             end = neighborhood_size
         elif (x + neighbor_radius) >= num_classes:
-            start = num_classes - 1 - neighborhood_size
+            start = num_classes - neighborhood_size
             end = num_classes
         else:
             start = x - neighbor_radius
