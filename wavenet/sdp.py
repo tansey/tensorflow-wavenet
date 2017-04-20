@@ -123,12 +123,13 @@ class FastUnivariateSDP:
 
         neighbors = tf.transpose(tf.gather(self.neighborhoods, label))
         print 'inputs', input_layer, 'neighbors', neighbors
-        neighbor_logprobs = tf.reduce_sum(self._node_logprobs(input_layer, neighbors))
-        neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0])
+        neighbor_logprobs = tf.reduce_sum(self._node_logprobs(input_layer, neighbors), axis=1)
+        neighbor_logprobs = tf.expand_dims(neighbor_logprobs, 0)
         print 'neighbor logprobs:', neighbor_logprobs
         regularizer = trend_filtering_penalty(neighbor_logprobs,
                                               self.neighborhoods.get_shape()[1],
                                               self._k)
+        return regularizer
 
     def _node_logprobs(self, input_layer, labels):
         nodes = tf.gather(self.paths, labels)
