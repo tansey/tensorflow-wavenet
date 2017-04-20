@@ -127,9 +127,9 @@ class FastUnivariateSDP:
         neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
 
         # Get the log probability of each class
-        neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=1), neighbors)
+        neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=1), neighbors, dtype=tf.float32)
         neighbor_logprobs = tf.transpose(neighbor_logprobs)
-
+        print neighbor_logprobs
         # Calculate the 1d trend filtering penalty
         return trend_filtering_penalty(neighbor_logprobs, self.neighborhoods.get_shape()[1], self._k)
 
