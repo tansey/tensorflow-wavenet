@@ -102,6 +102,23 @@ class FastUnivariateSDP:
         self._density = self._build_density(input_layer)
 
         # Build the loss functions
+        logprobs = self._node_logprobs(input_layer, labels)
+        self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
+        self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
+        
+
+        if self._lam > 0:
+            neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
+            neighbor_logprobs = tf.map_fn(lambda n: self._node_logprobs(input_layer, n), neighbors)
+            neighbor_logprobs = tf.transpose(neighbor_logprobs, [1,0,2])
+            print 'neighbor logprobs:', neighbor_logprobs
+            regularizer = trend_filtering_penalty(neighbor_logprobs,
+                                                  self.neighborhoods.get_shape()[1],
+                                                  self._k)
+            print 'regularizer: ', regularizer
+            self._train_loss += self._lam * regularizer
+
+    def _node_logprobs(self, input_layer, labels):
         labels = tf.argmax(labels, 1)
         nodes = tf.gather(self.paths, labels)
         signs = tf.gather(self.signs, labels)
@@ -110,22 +127,7 @@ class FastUnivariateSDP:
         input_layer = tf.expand_dims(input_layer, 1)
         logits = signs * (tf.reshape(tf.matmul(input_layer, W), [-1, self.tree.path_length]) + b)
         logprobs = -tf.log(1 + tf.exp(logits))
-
-        self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
-        self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
-        
-
-        if self._lam > 0:
-            neighbors = tf.gather(self.neighborhoods, labels)
-            print neighbors
-            nodes = tf.gather(self.paths, neighbors)
-            signs = tf.gather(self.signs, neighbors)
-            W = tf.transpose(tf.gather(self._W, nodes), [0,1,3,2])
-            b = tf.gather(self._b, nodes)
-            input_layer = tf.expand_dims(input_layer, 1)
-            # self._reg = trend_filtering_penalty(self.,
-            #     self.neighborhoods.get_shape()[1],
-            #     self._k)
+        return logprobs
 
     def _build_density(self, input_layer):
         W = tf.transpose(self._W)
