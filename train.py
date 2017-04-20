@@ -364,6 +364,7 @@ def main():
                     test_logprobs += cur_logprobs
                     if test_file_idx % 100 == 0:
                         print('Test file {} logprobs: {}'.format(test_file_idx, cur_logprobs))
+                    break # TEMP
                 test_logprobs /= float(test_reader.num_files)
                 print('Test score: {:.3f}'.format(test_logprobs))
 
