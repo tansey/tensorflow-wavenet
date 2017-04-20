@@ -34,7 +34,10 @@ def main():
         os.makedirs(test_dir)
 
     for t in train_indices:
-        copyfile(os.path.join(args.inputdir, files[t]), os.path.join(train_dir, files[t]))
+        src = os.path.join(args.inputdir, files[t])
+        dest = os.path.join(train_dir, files[t])
+        print 'src: {} dest: {}'.format(src,dest)
+        copyfile(src, dest)
 
     for t in test_indices:
         copyfile(os.path.join(args.inputdir, files[t]), os.path.join(test_dir, files[t]))
