@@ -104,14 +104,14 @@ class FastUnivariateSDP:
         labels = tf.argmax(labels, 1)
 
         # Build the loss functions
-        logprobs = self._node_logprobs(logits, labels)
+        logprobs = self._logprobs(logits, labels)
         print 'logprobs:', logprobs
         self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
         self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
 
         if self._lam > 0:
-            print 'inps and labs', input_layer, labels
-            regularizer = self._trend_filtering(input_layer, labels)
+            print 'inps and labs', logits, labels
+            regularizer = self._trend_filtering(logits, labels)
             regularizer = tf.Print(regularizer, [self._train_loss, regularizer], message='Loss vs. Regularizer:')
             print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
