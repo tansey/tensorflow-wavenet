@@ -83,7 +83,7 @@ class FastUnivariateSDP:
         self.tree = OrdinalTree(np.arange(num_classes))
         self.paths = tf.constant(self.tree.paths, tf.int32)
         self.signs = tf.constant(self.tree.splits * 2 - 1, tf.float32)
-        self.neighborhoods = tf.constant(build_neighborhoods(num_classes, neighbor_radius),, tf.int32)
+        self.neighborhoods = tf.constant(build_neighborhoods(num_classes, neighbor_radius), tf.int32)
 
         
         
