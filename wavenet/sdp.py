@@ -119,6 +119,7 @@ class FastUnivariateSDP:
             #                                 dtype=tf.float32,
             #                                 parallel_iterations=50000))
             regularizer = self._trend_filtering(input_layer, labels)
+            regularizer = tf.Print(regularizer, [self._train_loss, regularizer], message='Loss vs. Regularizer:')
             print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
 
