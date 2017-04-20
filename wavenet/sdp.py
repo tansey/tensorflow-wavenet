@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from tfsdp.utils import weight_variable, bias_variable
+from tfsdp.utils import weight_variable, bias_variable, trend_filtering_penalty
 
 class BallTree:
     def __init__(self, data):
