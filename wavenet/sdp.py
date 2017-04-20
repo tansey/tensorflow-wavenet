@@ -106,8 +106,8 @@ class FastUnivariateSDP:
         # Build the loss functions
         logprobs = self._logprobs(logits, labels)
         print 'logprobs:', logprobs
-        self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
-        self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
+        self._train_loss = -tf.reduce_mean(logprobs)
+        self._test_loss = -tf.reduce_mean(logprobs)
 
         if self._lam > 0:
             print 'inps and labs', logits, labels
