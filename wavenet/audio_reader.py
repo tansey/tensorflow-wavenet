@@ -200,15 +200,27 @@ class AudioReader(object):
                 if self.sample_size:
                     # Cut samples into pieces of size receptive_field +
                     # sample_size with receptive_field overlap
-                    while len(audio) > self.receptive_field:
-                        piece = audio[:(self.receptive_field +
-                                        self.sample_size), :]
-                        sess.run(self.enqueue,
-                                 feed_dict={self.sample_placeholder: piece})
-                        audio = audio[self.sample_size:, :]
-                        if self.gc_enabled:
-                            sess.run(self.gc_enqueue, feed_dict={
-                                self.id_placeholder: category_id})
+                    # while len(audio) > self.receptive_field:
+                    #     piece = audio[:(self.receptive_field +
+                    #                     self.sample_size), :]
+                    #     sess.run(self.enqueue,
+                    #              feed_dict={self.sample_placeholder: piece})
+                    #     audio = audio[self.sample_size:, :]
+                    #     if self.gc_enabled:
+                    #         sess.run(self.gc_enqueue, feed_dict={
+                    #             self.id_placeholder: category_id})
+
+                    # Choose a single sample instead
+                    mid_audio = audio.shape[0] - self.receptive_field
+                    num_samples = int(mid_audio / self.sample_size) + int(mid_audio % self.sample_size > 0)
+                    sample_index = np.random.randint(num_samples)
+                    sample_start = self.sample_size*sample_index
+                    piece = audio[sample_start:sample_start+(self.receptive_field + self.sample_size), :]
+                    sess.run(self.enqueue,
+                             feed_dict={self.sample_placeholder: piece})
+                    if self.gc_enabled:
+                        sess.run(self.gc_enqueue, feed_dict={
+                            self.id_placeholder: category_id})
                 else:
                     sess.run(self.enqueue,
                              feed_dict={self.sample_placeholder: audio})
