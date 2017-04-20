@@ -363,13 +363,15 @@ def main():
                 print('Evaluating against test set')
                 sys.stdout.flush()
                 test_logprobs = 0
-                for test_file_idx in xrange(test_reader.num_files * 5):
+                APPROX_FILE_SIZE=100000
+                num_test = int(test_reader.num_files * (APPROX_FILE_SIZE / args.sample_size))
+                for test_file_idx in xrange(num_test):
                     cur_logprobs = sess.run(test_loss)
                     test_logprobs += cur_logprobs
                     if test_file_idx % 100 == 0:
                         print('Test file {} logprobs: {}'.format(test_file_idx, cur_logprobs))
                         sys.stdout.flush()
-                test_logprobs /= float(test_reader.num_files * 5)
+                test_logprobs /= float(num_test)
                 print('Test score: {:.3f}'.format(test_logprobs))
                 sys.stdout.flush()
 
