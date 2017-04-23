@@ -60,7 +60,8 @@ class WaveNetModel(object):
                  global_condition_cardinality=None,
                  prob_model_type='softmax',
                  sdp_k=2,
-                 sdp_lam=0.001):
+                 sdp_lam=0.001,
+                 sdp_radius=5):
         '''Initializes the WaveNet model.
 
         Args:
@@ -115,9 +116,11 @@ class WaveNetModel(object):
         self.prob_model_type = prob_model_type
         self.sdp_k = sdp_k
         self.sdp_lam = sdp_lam
+        self.sdp_radius = sdp_radius
         self.prob_model = FastUnivariateSDP(self.quantization_channels,
                                              lam=self.sdp_lam,
-                                             k=self.sdp_k)
+                                             k=self.sdp_k,
+                                             neighbor_radius=self.sdp_radius)
 
         self.receptive_field = WaveNetModel.calculate_receptive_field(
             self.filter_width, self.dilations, self.scalar_input,

@@ -111,6 +111,8 @@ def get_arguments():
                         help='(if using SDP outputs) k value for trend filtering regularizer. Default: 2')
     parser.add_argument('--sdp_lam', type=float, default=0.001,
                         help='(if using SDP outputs) lambda value for trend filtering regularizer. Default: 0.001')
+    parser.add_argument('--sdp_radius', type=int, default=5,
+                        help='(if using SDP outputs) Number of neighbors on each side of the target class to smooth. Default: 5')
     parser.add_argument('--test_freq', type=int, default=100,
                         help='How frequently to record test performance.')
     return parser.parse_args()
@@ -277,7 +279,8 @@ def main():
         global_condition_cardinality=train_reader.gc_category_cardinality,
         prob_model_type=args.prob_model_type,
         sdp_k=args.sdp_k,
-        sdp_lam=args.sdp_lam)
+        sdp_lam=args.sdp_lam,
+        sdp_radius=args.sdp_radius)
 
     if args.l2_regularization_strength == 0:
         args.l2_regularization_strength = None

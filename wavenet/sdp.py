@@ -105,15 +105,12 @@ class FastUnivariateSDP:
 
         # Build the loss functions
         logprobs = self._logprobs(logits, labels)
-        print 'logprobs:', logprobs
         self._train_loss = -tf.reduce_mean(logprobs)
         self._test_loss = -tf.reduce_mean(logprobs)
 
         if self._lam > 0:
-            print 'inps and labs', logits, labels
             regularizer = self._trend_filtering(logits, labels)
             # regularizer = tf.Print(regularizer, [self._train_loss, regularizer], message='Loss vs. Regularizer:')
-            print 'regularizer:', regularizer
             self._train_loss += self._lam * regularizer
 
     def _logprobs(self, logits, labels):
@@ -125,66 +122,7 @@ class FastUnivariateSDP:
     def _trend_filtering(self, logits, labels):
         neighbors = tf.gather(self.neighborhoods, labels) # [batchsize, neighborhood_size]
         logprobs = self._logprobs(logits, neighbors)
-        print 'neighbors', neighbors
-        print 'neighbor logprobs', logprobs
         return trend_filtering_penalty(logprobs, self.neighborhoods.get_shape()[1], self._k)
-        
-
-    def build_old(self, input_layer, labels):
-        # Convert from 1-hot
-        labels = tf.argmax(labels, 1)
-
-        # Build the predictive density function
-        self._density = self._build_density(input_layer)
-
-        # Build the loss functions
-        logprobs = self._node_logprobs(input_layer, labels)
-        print 'logprobs:', logprobs
-        self._train_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
-        self._test_loss = -tf.reduce_mean(tf.reduce_sum(logprobs, axis=1))
-        
-
-        if self._lam > 0:
-            print 'inps and labs', input_layer, labels
-            # regularizer = tf.reduce_mean(tf.map_fn(lambda (inp, lab): self._trend_filtering(inp, lab),
-            #                                 [input_layer, labels],
-            #                                 dtype=tf.float32,
-            #                                 parallel_iterations=50000))
-            regularizer = self._trend_filtering(input_layer, labels)
-            # regularizer = tf.Print(regularizer, [self._train_loss, regularizer], message='Loss vs. Regularizer:')
-            print 'regularizer:', regularizer
-            self._train_loss += self._lam * regularizer
-
-    def _trend_filtering_old(self, input_layer, labels):
-        # Get the neighborhood of classes
-        neighbors = tf.transpose(tf.gather(self.neighborhoods, labels))
-
-        # Get the log probability of each class
-        neighbor_logprobs = tf.map_fn(lambda n: tf.reduce_sum(self._node_logprobs(input_layer, n), axis=1), neighbors, dtype=tf.float32)
-        neighbor_logprobs = tf.transpose(neighbor_logprobs)
-        print neighbor_logprobs
-        # Calculate the 1d trend filtering penalty
-        return trend_filtering_penalty(neighbor_logprobs, self.neighborhoods.get_shape()[1], self._k)
-
-        # neighbors = tf.transpose(tf.gather(self.neighborhoods, label))
-        # print 'inputs', input_layer, 'neighbors', neighbors
-        # neighbor_logprobs = tf.reduce_sum(self._node_logprobs(input_layer, neighbors), axis=1)
-        # neighbor_logprobs = tf.expand_dims(neighbor_logprobs, 0)
-        # print 'neighbor logprobs:', neighbor_logprobs
-        # regularizer = trend_filtering_penalty(neighbor_logprobs,
-        #                                       self.neighborhoods.get_shape()[1],
-        #                                       self._k)
-        # return regularizer
-
-    def _node_logprobs_old(self, input_layer, labels):
-        nodes = tf.gather(self.paths, labels)
-        signs = tf.gather(self.signs, labels)
-        W = tf.transpose(tf.gather(self._W, nodes), [0,2,1])
-        b = tf.gather(self._b, nodes)
-        input_layer = tf.expand_dims(input_layer, 1)
-        logits = signs * (tf.reshape(tf.matmul(input_layer, W), [-1, self.tree.path_length]) + b)
-        logprobs = -tf.log(1 + tf.exp(logits))
-        return logprobs
 
     def _build_density(self, input_layer):
         W = tf.transpose(self._W)
