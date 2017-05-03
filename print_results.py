@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
         lam_15_scores = []
         for lam,lamname in zip(lams, lamnames):
-            lam_filename = 'out_--data_dir_data_--prob_model_type_sdp_--test_freq_3000_--silence_threshold_0.01_--sample_size_16000_--wavenet_params_wavenet_params_{json}.json_--logdir_-scratch-cluster-tansey-tensorflow-wavenet-results-{size}_sdp{lamname}_--sdp_lam_{lam}--sdp_radius_15.out.out'
+            lam_filename = 'out_--data_dir_data_--prob_model_type_sdp_--test_freq_3000_--silence_threshold_0.01_--sample_size_16000_--wavenet_params_wavenet_params_{json}.json_--logdir_-scratch-cluster-tansey-tensorflow-wavenet-results-{size}_sdp{lamname}_15_--sdp_lam_{lam}--sdp_radius_15.out.out'
             lam_15_scores.append(get_test_scores(lam_filename.format(size=size, json=json, lam=lam, lamname=lamname)))
 
         print '********** {} **********'.format(size)
