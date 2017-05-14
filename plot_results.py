@@ -17,7 +17,7 @@ with sns.axes_style('white'):
     plt.figure(1)
     plt.plot(sizes, softmax, c='gray', lw=4, label='Multinomial')
     plt.plot(sizes, unsmoothed, c='orange', lw=4, label='Unsmoothed DP')
-    plt.plot(sizes, softmax, c='blue', lw=4, label='SDP')
+    plt.plot(sizes, smoothed, c='blue', lw=4, label='SDP')
     plt.ylabel('Log-probability', weight='bold', fontsize=24)
     plt.xlabel('Label count', weight='bold', fontsize=24)
     plt.legend(loc='upper left', ncol=2)
